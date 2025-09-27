@@ -17,7 +17,7 @@ const navigation = [
   { name: "Playground", href: "/playground", icon: Code2 },
   { name: "Learn", href: "/learn", icon: BookOpen },
   { name: "Quiz", href: "/quiz", icon: Zap },
-  { name: "Projects", href: "/projects", icon: Folder }, // changed icon & moved after Quiz
+  { name: "Projects", href: "/projects", icon: Folder },
   { name: "Profile", href: "/profile", icon: User },
 ];
 
@@ -54,8 +54,8 @@ export function Sidebar() {
         </button>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2">
+      {/* Navigation - fixed within sidebar */}
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto sticky top-0">
         {navigation.map((item) => {
           const isActive = location.pathname === item.href;
           return (
@@ -63,8 +63,8 @@ export function Sidebar() {
               key={item.name}
               to={item.href}
               className={cn(
-                "nav-item group",
-                isActive && "active",
+                "nav-item group flex items-center gap-3 p-2 rounded-lg transition-colors",
+                isActive && "bg-primary/10 text-primary",
                 collapsed && "justify-center px-2"
               )}
             >
