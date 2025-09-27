@@ -1,10 +1,10 @@
 import React from 'react';
 import { CSSProperties } from 'react';
+import { motion } from 'framer-motion';
 
 const LyzrAgentEmbedPage: React.FC = () => {
   const agentUrl = "https://v0-kodr-agent-showcase.vercel.app/kodr";
 
-  // Full page style (black background)
   const pageContainerStyle: CSSProperties = {
     backgroundColor: '#000000',
     minHeight: '100vh',
@@ -16,55 +16,81 @@ const LyzrAgentEmbedPage: React.FC = () => {
     color: '#E0E0E0',
   };
 
-  // DIV wrapper style (the "black UI" frame)
   const embedWrapperStyle: CSSProperties = {
     backgroundColor: '#111111',
     padding: '20px',
     border: '1px solid #333333',
-    borderRadius: '8px',
+    borderRadius: '12px',
     width: '100%',
     maxWidth: '1000px',
-    height: '700px', // Fixed height for the embed
+    height: '700px',
     marginTop: '50px',
-    boxShadow: '0 0 15px rgba(0, 0, 0, 0.7)',
+    boxShadow: '0 0 25px rgba(0, 255, 255, 0.5)',
+    overflow: 'hidden',
   };
 
-  // Iframe style
   const iframeStyle: CSSProperties = {
     width: '100%',
     height: '100%',
     border: 'none',
     backgroundColor: 'black',
+    borderRadius: '8px',
+  };
+
+  const headingStyle: CSSProperties = {
+    fontFamily: "'Orbitron', sans-serif",
+    fontWeight: 700,
+    fontSize: '4rem',
+    textAlign: 'center',
+    background: 'linear-gradient(90deg, #00FFFF, #FF00FF)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    marginBottom: '20px',
+  };
+
+  const linkStyle: CSSProperties = {
+    color: '#00FFFF',
+    textDecoration: 'underline',
+    marginTop: '10px',
+    fontWeight: 500,
   };
 
   return (
     <div style={pageContainerStyle}>
-      <h1>Lyzr AI Agent Embedded</h1>
-      <p>The agent is visible and interactive below (it remains in frame).</p>
-      
-      {/* This is the DIV containing the Iframe. 
-        It allows the agent to load and remain visible.
-      */}
-      <div id="lyzr-agent-container" style={embedWrapperStyle}>
+      <motion.h1
+        style={headingStyle}
+        initial={{ opacity: 0, y: -50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+      >
+        KODR AI Agent
+      </motion.h1>
+
+      <motion.a
+        href={agentUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={linkStyle}
+        whileHover={{ scale: 1.05, color: "#FF00FF" }}
+        transition={{ duration: 0.3 }}
+      >
+        Click here to open in a new tab
+      </motion.a>
+
+      <motion.div
+        id="lyzr-agent-container"
+        style={embedWrapperStyle}
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8, delay: 0.3 }}
+      >
         <iframe
           src={agentUrl}
           title="Lyzr AI Agent"
           style={iframeStyle}
           allow="clipboard-write; fullscreen"
         />
-      </div>
-
-      {/* If you want a clickable link, use a standard link OUTSIDE the embed, 
-        or only wrap a specific area.
-      */}
-      <a 
-        href={agentUrl} 
-        target="_blank" 
-        rel="noopener noreferrer" 
-        style={{ color: '#00FFFF', marginTop: '20px' }}
-      >
-        Click here to open the agent in a new tab.
-      </a>
+      </motion.div>
     </div>
   );
 };

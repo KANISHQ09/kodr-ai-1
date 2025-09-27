@@ -2,6 +2,7 @@ import { BookOpen, Play, Clock, Users, Star } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 
 const courses = [
   {
@@ -65,8 +66,13 @@ export default function Learn() {
 
       <div className="flex-1 p-6">
         {/* Featured Section */}
-        <div className="mb-8">
-          <Card className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20">
+        <motion.div 
+          className="mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <Card className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20 transition-transform duration-300 cursor-pointer">
             <CardHeader>
               <div className="flex items-center space-x-2">
                 <Star className="w-5 h-5 text-accent" />
@@ -94,7 +100,7 @@ export default function Learn() {
                       <span className="text-sm text-muted-foreground">1,250 students</span>
                     </div>
                   </div>
-                  <Button className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
+                  <Button className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-all">
                     <Play className="w-4 h-4 mr-2" />
                     Start Learning
                   </Button>
@@ -120,64 +126,72 @@ greetUser("Developer");`}
               </div>
             </CardContent>
           </Card>
-        </div>
+        </motion.div>
 
         {/* Course Grid */}
         <div>
           <h2 className="text-2xl font-bold mb-6">All Courses</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {courses.map((course, index) => (
-              <Card key={index} className="hover-glow transition-all duration-200 cursor-pointer">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-lg">{course.title}</CardTitle>
-                      <CardDescription className="mt-2">
-                        {course.description}
-                      </CardDescription>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                      <span className="text-sm font-medium">{course.rating}</span>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <Badge className={difficultyColors[course.difficulty as keyof typeof difficultyColors]}>
-                        {course.difficulty}
-                      </Badge>
-                      <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                        <div className="flex items-center space-x-1">
-                          <Clock className="w-4 h-4" />
-                          <span>{course.duration}</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <Users className="w-4 h-4" />
-                          <span>{course.students}</span>
-                        </div>
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+              >
+                <Card className="hover:scale-105 transition-transform duration-300 cursor-pointer">
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="text-lg">{course.title}</CardTitle>
+                        <CardDescription className="mt-2">
+                          {course.description}
+                        </CardDescription>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                        <span className="text-sm font-medium">{course.rating}</span>
                       </div>
                     </div>
-                    
-                    <div>
-                      <p className="text-sm font-medium mb-2">Topics covered:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {course.topics.map((topic, topicIndex) => (
-                          <Badge key={topicIndex} variant="outline" className="text-xs">
-                            {topic}
-                          </Badge>
-                        ))}
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <Badge className={difficultyColors[course.difficulty as keyof typeof difficultyColors]}>
+                          {course.difficulty}
+                        </Badge>
+                        <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                          <div className="flex items-center space-x-1">
+                            <Clock className="w-4 h-4" />
+                            <span>{course.duration}</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <Users className="w-4 h-4" />
+                            <span>{course.students}</span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                      
+                      <div>
+                        <p className="text-sm font-medium mb-2">Topics covered:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {course.topics.map((topic, topicIndex) => (
+                            <Badge key={topicIndex} variant="outline" className="text-xs">
+                              {topic}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
 
-                    <Button variant="outline" className="w-full group">
-                      <BookOpen className="w-4 h-4 mr-2 group-hover:text-primary transition-colors" />
-                      Enroll Now
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                      <Button variant="outline" className="w-full group hover:scale-105 transition-transform duration-200">
+                        <BookOpen className="w-4 h-4 mr-2 group-hover:text-primary transition-colors" />
+                        Enroll Now
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
             ))}
           </div>
         </div>

@@ -8,8 +8,9 @@ import Dashboard from "./pages/Dashboard";
 import Playground from "./pages/Playground";
 import Learn from "./pages/Learn";
 import Profile from "./pages/Profile";
-import Settings from "./pages/Settings";
+import Projects from "./pages/Projects";
 import NotFound from "./pages/NotFound";
+import Quiz from "./pages/Quiz";
 
 const queryClient = new QueryClient();
 
@@ -24,8 +25,9 @@ const App = () => (
             <Route path="/" element={<Dashboard />} />
             <Route path="/playground" element={<Playground />} />
             <Route path="/learn" element={<Learn />} />
+            <Route path="/quiz" element={<Quiz />} />
             <Route path="/profile" element={<Profile />} />
-            <Route path="/settings" element={<Settings />} />
+            <Route path="/projects" element={<Projects />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Layout>

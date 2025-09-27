@@ -8,7 +8,7 @@ import {
   ChevronRight,
   Zap,
   BookOpen,
-  Settings
+  Folder
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -16,8 +16,9 @@ const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Playground", href: "/playground", icon: Code2 },
   { name: "Learn", href: "/learn", icon: BookOpen },
+  { name: "Quiz", href: "/quiz", icon: Zap },
+  { name: "Projects", href: "/projects", icon: Folder }, // changed icon & moved after Quiz
   { name: "Profile", href: "/profile", icon: User },
-  { name: "Settings", href: "/settings", icon: Settings },
 ];
 
 export function Sidebar() {
