@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   User,
@@ -10,6 +10,9 @@ import {
   Target,
   Code2,
   Brain,
+  Loader2,
+  Save, // Icon for save button
+  X, // Icon for cancel button
 } from "lucide-react";
 import {
   Card,
@@ -18,55 +21,133 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input"; // Assuming you have this component
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
+import { toast } from "sonner"; // Optional: for notifications (or use alert)
 
-const achievements = [
-  {
-    id: 1,
-    title: "First Code Analysis",
-    description: "Completed your first AI-powered code explanation",
-    icon: Brain,
-    earned: true,
-    date: "2024-01-15",
-  },
-  {
-    id: 2,
-    title: "JavaScript Explorer",
-    description: "Analyzed 50+ lines of JavaScript code",
-    icon: Code2,
-    earned: true,
-    date: "2024-01-20",
-  },
-  {
-    id: 3,
-    title: "Multi-Language Learner",
-    description: "Worked with 3 different programming languages",
-    icon: Target,
-    earned: true,
-    date: "2024-01-25",
-  },
-  {
-    id: 4,
-    title: "Code Master",
-    description: "Analyzed 500+ lines of code",
-    icon: Trophy,
-    earned: false,
-    date: null,
-  },
-];
-
-const skillProgress = [
-  { name: "JavaScript", level: 75, maxLevel: 100 },
-  { name: "Python", level: 60, maxLevel: 100 },
-  { name: "Java", level: 45, maxLevel: 100 },
-  { name: "C++", level: 30, maxLevel: 100 },
-];
+// Firebase Imports
+import { auth, db } from "../firebase/firebase";
+import { onAuthStateChanged, updateProfile } from "firebase/auth";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  // State for User Auth Data
+  const [authUser, setAuthUser] = useState(null);
+
+  // State for Editable Fields
+  const [formData, setFormData] = useState({
+    displayName: "",
+    githubHandle: "@KANISHQ09", // Default if not found
+  });
+
+  // State for Database Data (Stats, Skills, etc.)
+  const [userStats, setUserStats] = useState({
+    linesAnalyzed: 0,
+    aiExplanations: 0,
+    hoursLearned: 0,
+    languages: 0,
+  });
+
+  const [skills, setSkills] = useState([
+    { name: "JavaScript", level: 0, maxLevel: 100 },
+    { name: "Python", level: 0, maxLevel: 100 },
+    { name: "Java", level: 0, maxLevel: 100 },
+    { name: "C++", level: 0, maxLevel: 100 },
+  ]);
+
+  // Fetch Data Effect
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        setAuthUser(currentUser);
+        
+        // Initialize form data with Auth Name
+        setFormData(prev => ({
+            ...prev,
+            displayName: currentUser.displayName || "",
+        }));
+
+        try {
+          const docRef = doc(db, "users", currentUser.uid);
+          const docSnap = await getDoc(docRef);
+
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            setUserStats(data.stats || userStats);
+            if (data.skills) setSkills(data.skills);
+            
+            // If Github handle exists in DB, use it
+            if (data.githubHandle) {
+                setFormData(prev => ({ ...prev, githubHandle: data.githubHandle }));
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        }
+      } else {
+        setAuthUser(null);
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Handle Save Logic
+  const handleSaveProfile = async () => {
+    if (!authUser) return;
+    setSaving(true);
+
+    try {
+        // 1. Update Firebase Auth Profile (Display Name)
+        if (formData.displayName !== authUser.displayName) {
+            await updateProfile(authUser, {
+                displayName: formData.displayName
+            });
+        }
+
+        // 2. Update Firestore Document (Custom fields like Github Handle)
+        const userRef = doc(db, "users", authUser.uid);
+        await updateDoc(userRef, {
+            githubHandle: formData.githubHandle,
+            // You can add 'bio' or other fields here
+        });
+
+        // 3. Update Local State to reflect changes immediately
+        setAuthUser({ ...authUser, displayName: formData.displayName });
+        setIsEditing(false);
+        // Optional: toast.success("Profile updated successfully!");
+    } catch (error) {
+        console.error("Error updating profile:", error);
+        // Optional: toast.error("Failed to update profile");
+    } finally {
+        setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!authUser) {
+    return (
+      <div className="h-screen flex items-center justify-center flex-col gap-4">
+        <h2 className="text-xl font-bold">Please log in to view your profile</h2>
+        <Button onClick={() => window.location.href = "/login"}>Go to Login</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen overflow-auto">
@@ -78,7 +159,7 @@ export default function Profile() {
         className="p-6 border-b border-border bg-card/50"
       >
         <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-          Himanshu's Profile
+          {authUser.displayName ? `${authUser.displayName}'s Profile` : "My Profile"}
         </h1>
         <p className="text-muted-foreground mt-2">
           Track your learning progress and achievements
@@ -94,39 +175,92 @@ export default function Profile() {
             transition={{ duration: 0.5 }}
           >
             <Card className="lg:col-span-1">
-              <CardHeader className="text-center">
+              <CardHeader className="text-center relative">
                 <Avatar className="w-24 h-24 mx-auto mb-4 ring-4 ring-primary/20">
-                  <AvatarImage src="/placeholder-avatar.png" />
+                  <AvatarImage src={authUser.photoURL || "/placeholder-avatar.png"} />
                   <AvatarFallback className="text-xl bg-gradient-to-br from-primary to-accent text-primary-foreground">
-                    H
+                    {authUser.displayName ? authUser.displayName[0].toUpperCase() : "U"}
                   </AvatarFallback>
                 </Avatar>
-                <CardTitle>Himanshu</CardTitle>
-                <CardDescription>Full Stack Developer</CardDescription>
+
+                {/* Conditional Rendering: Edit Mode vs View Mode */}
+                {isEditing ? (
+                    <div className="space-y-2">
+                        <Input 
+                            value={formData.displayName}
+                            onChange={(e) => setFormData({...formData, displayName: e.target.value})}
+                            placeholder="Display Name"
+                            className="text-center font-bold h-9"
+                        />
+                        <CardDescription>Full Stack Developer</CardDescription>
+                    </div>
+                ) : (
+                    <>
+                        <CardTitle>{authUser.displayName || "User"}</CardTitle>
+                        <CardDescription>Full Stack Developer</CardDescription>
+                    </>
+                )}
               </CardHeader>
+
               <CardContent className="space-y-4">
                 <div className="space-y-3">
-                  <div className="flex items-center space-x-2 text-sm">
-                    <Mail className="w-4 h-4 text-muted-foreground" />
-                    <span>himanshu-mac@gmail.com</span>
+                  <div className="flex items-center space-x-2 text-sm overflow-hidden">
+                    <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    <span className="truncate" title={authUser.email}>{authUser.email}</span>
                   </div>
+                  
                   <div className="flex items-center space-x-2 text-sm">
-                    <Github className="w-4 h-4 text-muted-foreground" />
-                    <span>@frontifybyHB</span>
+                    <Github className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    {isEditing ? (
+                         <Input 
+                         value={formData.githubHandle}
+                         onChange={(e) => setFormData({...formData, githubHandle: e.target.value})}
+                         placeholder="@username"
+                         className="h-7 text-xs"
+                     />
+                    ) : (
+                        <span>{formData.githubHandle}</span>
+                    )}
                   </div>
+                  
                   <div className="flex items-center space-x-2 text-sm">
-                    <Calendar className="w-4 h-4 text-muted-foreground" />
-                    <span>Joined in 2025</span>
+                    <Calendar className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    <span>Joined {new Date(authUser.metadata.creationTime).getFullYear()}</span>
                   </div>
                 </div>
-                <Button
-                  variant="outline"
-                  className="w-full hover:bg-primary hover:text-white transition"
-                  onClick={() => setIsEditing(!isEditing)}
-                >
-                  <User className="w-4 h-4 mr-2" />
-                  {isEditing ? "Close Edit" : "Edit Profile"}
-                </Button>
+
+                {/* Action Buttons */}
+                <div className="flex gap-2">
+                    {isEditing ? (
+                        <>
+                            <Button
+                                variant="outline"
+                                className="flex-1 border-destructive text-destructive hover:bg-destructive/10"
+                                onClick={() => setIsEditing(false)}
+                                disabled={saving}
+                            >
+                                <X className="w-4 h-4 mr-2" /> Cancel
+                            </Button>
+                            <Button
+                                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+                                onClick={handleSaveProfile}
+                                disabled={saving}
+                            >
+                                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                                Save
+                            </Button>
+                        </>
+                    ) : (
+                        <Button
+                            variant="outline"
+                            className="w-full hover:bg-primary hover:text-white transition"
+                            onClick={() => setIsEditing(true)}
+                        >
+                            <User className="w-4 h-4 mr-2" />
+                            Edit Profile
+                        </Button>
+                    )}
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -134,11 +268,12 @@ export default function Profile() {
           {/* Stats Overview */}
           <div className="lg:col-span-2 space-y-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {/*  - This helps visualize how the stats map to these cards */}
               {[
-                { label: "Lines Analyzed", value: "1,247", color: "text-primary" },
-                { label: "AI Explanations", value: "342", color: "text-accent" },
-                { label: "Hours Learned", value: "24", color: "text-green-400" },
-                { label: "Languages", value: "4", color: "text-purple-400" },
+                { label: "Lines Analyzed", value: userStats.linesAnalyzed, color: "text-primary" },
+                { label: "AI Explanations", value: userStats.aiExplanations, color: "text-accent" },
+                { label: "Hours Learned", value: userStats.hoursLearned, color: "text-green-400" },
+                { label: "Languages", value: userStats.languages, color: "text-purple-400" },
               ].map((stat, i) => (
                 <motion.div
                   key={i}
@@ -177,7 +312,7 @@ export default function Profile() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {skillProgress.map((skill, index) => (
+                  {skills.map((skill, index) => (
                     <motion.div
                       key={index}
                       initial={{ opacity: 0, width: "0%" }}
@@ -199,74 +334,6 @@ export default function Profile() {
             </motion.div>
           </div>
         </div>
-
-        {/* Achievements */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Trophy className="w-5 h-5 text-primary" />
-                <span>Achievements</span>
-              </CardTitle>
-              <CardDescription>
-                Milestones you've reached in your coding journey
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {achievements.map((achievement, i) => (
-                  <motion.div
-                    key={achievement.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.2 }}
-                    className={`p-4 rounded-lg border transition-all duration-200 ${
-                      achievement.earned
-                        ? "bg-primary/10 border-primary/20 hover:bg-primary/20"
-                        : "bg-muted/30 border-muted opacity-50"
-                    }`}
-                  >
-                    <div className="flex flex-col items-center text-center space-y-3">
-                      <div
-                        className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                          achievement.earned
-                            ? "bg-primary/20 text-primary"
-                            : "bg-muted text-muted-foreground"
-                        }`}
-                      >
-                        <achievement.icon className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-sm">
-                          {achievement.title}
-                        </h4>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {achievement.description}
-                        </p>
-                      </div>
-                      {achievement.earned ? (
-                        <Badge
-                          variant="outline"
-                          className="text-xs bg-primary/10 text-primary border-primary/20"
-                        >
-                          Earned {achievement.date}
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="text-xs">
-                          Locked
-                        </Badge>
-                      )}
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
       </div>
     </div>
   );
