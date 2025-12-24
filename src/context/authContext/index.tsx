@@ -3,8 +3,6 @@ import { auth, db } from "../../firebase/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 
-/* ---------- Types ---------- */
-
 interface UserProfile {
   uid: string;
   email: string | null;
@@ -15,15 +13,13 @@ interface UserProfile {
 }
 
 interface AuthContextType {
-  firebaseUser: User | null;      // raw Firebase user
-  currentUser: UserProfile | null; // app-level user profile
+  firebaseUser: User | null;
+  currentUser: UserProfile | null;
   userLoggedIn: boolean;
   isEmailUser: boolean;
   isGoogleUser: boolean;
   loading: boolean;
 }
-
-/* ---------- Context ---------- */
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -35,13 +31,7 @@ export function useAuth() {
   return context;
 }
 
-/* ---------- Provider ---------- */
-
-interface AuthProviderProps {
-  children: React.ReactNode;
-}
-
-export function AuthProvider({ children }: AuthProviderProps) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [userLoggedIn, setUserLoggedIn] = useState(false);
@@ -55,55 +45,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   async function initializeUser(user: User | null) {
-    setLoading(true);
-
     if (!user) {
       setFirebaseUser(null);
       setCurrentUser(null);
       setUserLoggedIn(false);
-      setIsEmailUser(false);
-      setIsGoogleUser(false);
       setLoading(false);
       return;
     }
 
     setFirebaseUser(user);
-
-    // 🔐 Provider checks (your existing logic)
-    setIsEmailUser(
-      user.providerData.some((p) => p.providerId === "password")
-    );
-    setIsGoogleUser(
-      user.providerData.some((p) => p.providerId === "google.com")
-    );
-
+    setIsEmailUser(user.providerData.some((p) => p.providerId === "password"));
+    setIsGoogleUser(user.providerData.some((p) => p.providerId === "google.com"));
     setUserLoggedIn(true);
 
-    // 🔥 Fetch user profile from Firestore
     try {
       const userRef = doc(db, "users", user.uid);
       const snap = await getDoc(userRef);
 
       if (snap.exists()) {
-        setCurrentUser({
-          uid: user.uid,
-          email: user.email,
-          ...(snap.data() as any),
-        });
+        setCurrentUser({ uid: user.uid, email: user.email, ...(snap.data() as any) });
       } else {
-        // fallback if profile does not exist
-        setCurrentUser({
-          uid: user.uid,
-          email: user.email,
-          photoURL: user.photoURL ?? undefined,
-        });
+        setCurrentUser({ uid: user.uid, email: user.email, photoURL: user.photoURL ?? undefined });
       }
     } catch (error) {
       console.error("Failed to fetch user profile:", error);
-      setCurrentUser({
-        uid: user.uid,
-        email: user.email,
-      });
+      setCurrentUser({ uid: user.uid, email: user.email });
     }
 
     setLoading(false);
@@ -118,9 +84,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     loading,
   };
 
+  // FIX: Always render children so App.tsx can handle the loading UI
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children} 
     </AuthContext.Provider>
   );
 }

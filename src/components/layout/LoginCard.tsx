@@ -1,174 +1,120 @@
-import React, { useState } from 'react'
-import CardShell from './CardShell'
-import Input from '../mini-components/Input'
-import Button from '../mini-components/Button'
-import { useAuth } from '@/context/authContext/index'
-import { doSignInWithEmailAndPassword, doSignInWithGoogle } from '@/firebase/auth'
-/* ---------- Login component ---------- */
+import React, { useState } from 'react';
+import CardShell from './CardShell';
+import Input from '../mini-components/Input';
+import { Button as UiButton } from "@/components/ui/button"; // Using Shadcn Button for better style
+import { useAuth } from '@/context/authContext/index';
+import { doSignInWithEmailAndPassword, doSignInWithGoogle } from '@/firebase/auth';
+import { Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface LoginCardProps {
     onSwitchToRegister: () => void;
 }
 
-const LoginCard: React.FC<LoginCardProps> = ({ onSwitchToRegister }: LoginCardProps) => {
-
-    const { userLoggedIn } = useAuth()
+const LoginCard: React.FC<LoginCardProps> = ({ onSwitchToRegister }) => {
+    const { userLoggedIn } = useAuth();
+    const navigate = useNavigate();
     const [email, setEmail] = useState<string>("");
     const [password, setPassword] = useState<string>("");
-    const [showPwd, setShowPwd] = useState<boolean>(false);
     const [submitting, setSubmitting] = useState<boolean>(false);
     const [errorMessage, setErrorMessage] = useState<string>("");
 
-    const pwdOk = password.length >= 8;
-    const isValidEmail = (e = "") => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
-    const emailOk = isValidEmail(email);
-    const canSubmit = emailOk && pwdOk && !submitting;
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!canSubmit) return;
-
         setSubmitting(true);
         setErrorMessage("");
 
         try {
             await doSignInWithEmailAndPassword(email, password);
-            // User will be redirected automatically by auth state change
+            navigate('/dashboard'); // Explicit redirect
         } catch (error: any) {
             setSubmitting(false);
-            // Handle Firebase auth errors
-            const errorCode = error.code;
-            let message = "Failed to sign in. Please try again.";
-
-            if (errorCode === 'auth/invalid-credential') {
-                message = "Invalid email or password.";
-            } else if (errorCode === 'auth/user-not-found') {
-                message = "No account found with this email.";
-            } else if (errorCode === 'auth/wrong-password') {
-                message = "Incorrect password.";
-            } else if (errorCode === 'auth/too-many-requests') {
-                message = "Too many failed attempts. Please try again later.";
-            } else if (errorCode === 'auth/user-disabled') {
-                message = "This account has been disabled.";
-            }
-
-            setErrorMessage(message);
+            setErrorMessage("Invalid email or password.");
         }
     };
 
     const handleGoogle = async () => {
         setSubmitting(true);
-        setErrorMessage("");
-
         try {
             await doSignInWithGoogle();
-            // User will be redirected automatically by auth state change
-        } catch (error: any) {
+            navigate('/dashboard');
+        } catch (error) {
             setSubmitting(false);
-            const errorCode = error.code;
-            let message = "Failed to sign in with Google.";
-
-            if (errorCode === 'auth/popup-closed-by-user') {
-                message = "Sign-in popup was closed.";
-            } else if (errorCode === 'auth/cancelled-popup-request') {
-                message = "Sign-in was cancelled.";
-            }
-
-            setErrorMessage(message);
+            setErrorMessage("Google sign-in failed.");
         }
     };
 
     return (
-        <CardShell title="Sign in" subtitle="Use your account to access the dashboard">
-            <form onSubmit={handleSubmit} className="space-y-5">
+        <CardShell 
+            title="Welcome back" 
+            subtitle="Sign in to continue to your dashboard"
+        >
+            <form onSubmit={handleSubmit} className="space-y-4">
                 {errorMessage && (
-                    <div className="p-3 rounded-lg bg-red-50 border border-red-200">
-                        <p className="text-sm text-red-600">{errorMessage}</p>
+                    <div className="p-3 rounded-md bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
+                        {errorMessage}
                     </div>
                 )}
 
-                <label className="block">
-                    <span className="text-sm font-medium text-gray-700">Email</span>
+                <div className="space-y-2">
                     <Input
                         type="email"
-                        autoComplete="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="you@example.com"
-                        className={`mt-2 w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 ${email ? (emailOk ? "border-gray-200 focus:ring-indigo-300" : "border-red-200 focus:ring-red-200") : "border-gray-200"
-                            }`}
-                        aria-invalid={!emailOk && email !== ""}
-                        aria-describedby="email-error"
+                        placeholder="Email address"
+                        className="bg-background/50 border-white/10 focus:border-primary/50"
                     />
-                    {!emailOk && email !== "" && (
-                        <p id="email-error" className="text-xs text-red-600 mt-2">Enter a valid email.</p>
-                    )}
-                </label>
-
-                <label className="block relative">
-                    <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-700">Password</span>
-                        <span className="text-xs text-gray-500">min 8 characters</span>
-                    </div>
-                    <div className="mt-2">
-                        <Input
-                            type={showPwd ? "text" : "password"}
-                            autoComplete="current-password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Your password"
-                            className={`w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 ${password ? (pwdOk ? "border-gray-200 focus:ring-indigo-300" : "border-red-200 focus:ring-red-200") : "border-gray-200"
-                                }`}
-                            aria-invalid={!pwdOk && password !== ""}
-                        />
-                        <Button
-                            type="button"
-                            onClick={() => setShowPwd((s) => !s)}
-                            className="absolute right-3 top-10 text-sm text-indigo-600 hover:underline focus:outline-none"
-                            aria-pressed={showPwd}
-                            name={showPwd ? "Hide" : "Show"}
-                        />
-                        {!pwdOk && password !== "" && <p className="text-xs text-red-600 mt-2">Password must be at least 8 characters.</p>}
-                    </div>
-                </label>
-
-                <div className="text-center text-sm text-gray-500">or</div>
-
-                <div className="space-y-3">
-                    <button
-                        type="button"
-                        onClick={handleGoogle}
-                        disabled={submitting}
-                        className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-lg border border-gray-200 bg-white hover:shadow-sm"
-                    >
-                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" aria-hidden>
-                            <path d="M21 12.3c0-.6-.1-1.2-.2-1.8H12v3.4h4.6c-.2 1-1.2 2.9-4.6 3v2h6.6c1-1.9 1.6-3.8 1.6-6.6z" fill="#4285F4" />
-                            <path d="M12 22c2.7 0 5-0.9 6.6-2.4l-3.2-2.1c-.9.6-2.1.9-3.4.9-2.6 0-4.8-1.7-5.6-4.1H3.1v2.6C4.7 19.9 8.1 22 12 22z" fill="#34A853" />
-                            <path d="M6.4 13.9c-.2-.6-.4-1.3-.4-2s.1-1.4.4-2V7.3H3.1C2.4 8.6 2 10.2 2 12s.4 3.4 1.1 4.7l3.3-2.8z" fill="#FBBC05" />
-                            <path d="M12 6.5c1.5 0 2.9.5 3.9 1.5l2.9-2.9C17 3 14.7 2 12 2 8.1 2 4.7 4.1 3.1 7.3l3.3 2.6C7.2 8.2 9.4 6.5 12 6.5z" fill="#EA4335" />
-                        </svg>
-                        <span className="text-sm font-medium text-gray-700">Sign up with Google</span>
-                    </button>
-
-                </div>
-
-                <div className="flex items-center justify-between gap-4">
-                    <Button
-                        type="submit"
-                        disabled={!canSubmit}
-                        className={`flex-1 py-3 rounded-lg font-semibold text-white transition ${canSubmit ? "bg-red-600 hover:bg-red-700" : "bg-gray-300 cursor-not-allowed"
-                            }`}
-                        name={submitting ? "Signing in..." : "Sign in"}
+                    <Input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Password"
+                        className="bg-background/50 border-white/10 focus:border-primary/50"
                     />
                 </div>
 
-                <div className="pt-4 text-center">
+                <UiButton 
+                    type="submit" 
+                    className="w-full bg-primary hover:bg-primary/90 text-white font-medium py-2.5 h-auto"
+                    disabled={submitting}
+                >
+                    {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                    Sign In
+                </UiButton>
+
+                <div className="relative my-6">
+                    <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t border-white/10" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+                    </div>
+                </div>
+
+                <UiButton
+                    type="button"
+                    variant="outline"
+                    onClick={handleGoogle}
+                    disabled={submitting}
+                    className="w-full border-white/10 hover:bg-white/5 bg-transparent h-auto py-2.5"
+                >
+                    <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                    </svg>
+                    Google
+                </UiButton>
+
+                <div className="pt-4 text-center text-sm">
+                    <span className="text-muted-foreground">Don't have an account? </span>
                     <button
                         type="button"
                         onClick={onSwitchToRegister}
-                        className="text-sm text-indigo-600 hover:underline focus:outline-none"
+                        className="text-primary hover:text-primary/80 font-semibold transition-colors"
                     >
-                        Don't have an account? <span className="font-semibold">Register</span>
+                        Create account
                     </button>
                 </div>
             </form>
@@ -176,4 +122,4 @@ const LoginCard: React.FC<LoginCardProps> = ({ onSwitchToRegister }: LoginCardPr
     );
 }
 
-export default LoginCard
+export default LoginCard;
