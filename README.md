@@ -1,6 +1,7 @@
 # KODR AI - Next Gen AI Coding Companion 🚀
 
-**Team Name:** CodeNext **Problem Statement:** Open Innovation 
+**Team Name:** CodeNext 
+**Problem Statement:** Open Innovation 
 
 > 
 > **Experience the next generation of AI with the leveraging power of AI.** 
