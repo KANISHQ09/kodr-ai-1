@@ -14,20 +14,8 @@ export default function SocialProof() {
         <MotionWrapper>
           <div className="text-center mb-12">
             <p className="text-lg text-muted-foreground mb-8">
-              Trusted by learners in <span className="text-primary font-semibold">colleges</span>
+              Trusted and loved by <span className="text-primary font-semibold">students</span>
             </p>
-            
-            {/* College Logos Placeholder (Flex Wrap) */}
-            <div className="flex flex-wrap justify-center items-center gap-8 mb-12 opacity-60">
-              {[1, 2, 3].map((index) => (
-                <div
-                  key={index}
-                  className="w-16 h-16 rounded-lg bg-muted/30 flex items-center justify-center text-xs text-muted-foreground"
-                >
-                  Logo {index}
-                </div>
-              ))}
-            </div>
           </div>
         </MotionWrapper>
 
