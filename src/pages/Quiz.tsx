@@ -95,7 +95,7 @@ const QuizPage = () => {
                 <Button onClick={restartQuiz} variant="outline" className="w-full sm:w-auto order-2 sm:order-1 h-10 md:h-11">
                   <RotateCcw className="h-4 w-4 mr-2" /> Retry
                 </Button>
-                <Button onClick={() => navigate("/")} className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:opacity-90 order-1 sm:order-2 h-10 md:h-11">
+                <Button onClick={() => navigate("/dashboard")} className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:opacity-90 order-1 sm:order-2 h-10 md:h-11">
                   Return to Dashboard
                 </Button>
               </div>
