@@ -19,6 +19,7 @@ const Projects = lazy(() => import("./pages/Projects"));
 const Quiz = lazy(() => import("./pages/Quiz"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AuthExample = lazy(() => import("./pages/AuthExample"));
+const Pricing = lazy(() => import("./pages/Pricing"));
 
 const LandingPage = lazy(() => import("./pages/Index").then(module => ({ default: module.LandingPage })));
 const Chat = lazy(() => import("./pages/Playground").then(module => ({ default: module.Chat })));
@@ -45,7 +46,7 @@ const AppRoutes = () => {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth" element={<AuthExample />} />
-
+        <Route path="/pricing" element={<Pricing />} />
         <Route element={<Layout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/playground" element={<Chat />} />

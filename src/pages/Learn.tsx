@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 const courses = [
   {
@@ -50,6 +51,8 @@ const difficultyColors = {
 };
 
 export default function Learn() {
+  const navigate = useNavigate();
+
   return (
     <div className="flex flex-col h-screen overflow-x-hidden overflow-y-auto w-full bg-background">
       {/* Header */}
@@ -192,7 +195,11 @@ greetUser("Developer");`}
                         </div>
                       </div>
 
-                      <Button variant="outline" className="w-full mt-4 group hover:bg-primary/5 hover:text-primary transition-colors">
+                      <Button 
+                        variant="outline" 
+                        className="w-full mt-4 group hover:bg-primary/5 hover:text-primary transition-colors"
+                        onClick={() => navigate("/pricing")}
+                      >
                         <BookOpen className="w-4 h-4 mr-2" />
                         Enroll Now
                       </Button>
